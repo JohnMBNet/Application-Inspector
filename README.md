@@ -42,15 +42,10 @@ The interface features a gradient header, statistics dashboard, and detailed app
 
 Run the script:
 ```powershell
-.\AppInspector.ps1
+.\AppInspector.ps1 -port 8095
 ```
 
-With custom port:
-```powershell
-.\AppInspector.ps1 -Port 9000
-```
-
-Then open your browser to `http://localhost:8095` (or your custom port).
+Then open your browser to `http://localhost:8095`.
 
 ## Features in Detail
 
