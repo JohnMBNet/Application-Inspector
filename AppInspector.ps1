@@ -734,7 +734,7 @@ $html = @'
                 if (app.InstallLocation) {
                     html += '<div class="info-section"><div class="info-section-title"><i class="fas fa-folder"></i> Install Location</div>';
                     html += '<div class="info-value path">' + escapeHtml(app.InstallLocation);
-                    html += '<button class="copy-btn" onclick="copyText(\'' + escapeJs(app.InstallLocation) + '\', this)"><i class="fas fa-copy"></i></button></div></div>';
+                    html += '<button class="copy-btn" data-copy="' + escapeAttr(app.InstallLocation) + '" onclick="copyText(this)"><i class="fas fa-copy"></i></button></div></div>';
                 }
 
                 if (app.UninstallString || app.QuietUninstallString) {
@@ -742,12 +742,12 @@ $html = @'
                     if (app.UninstallString) {
                         html += '<div class="info-item" style="margin-bottom:10px"><div class="info-label">Standard Uninstall</div>';
                         html += '<div class="info-value path">' + escapeHtml(app.UninstallString);
-                        html += '<button class="copy-btn" onclick="copyText(\'' + escapeJs(app.UninstallString) + '\', this)"><i class="fas fa-copy"></i></button></div></div>';
+                        html += '<button class="copy-btn" data-copy="' + escapeAttr(app.UninstallString) + '" onclick="copyText(this)"><i class="fas fa-copy"></i></button></div></div>';
                     }
                     if (app.QuietUninstallString) {
                         html += '<div class="info-item"><div class="info-label">Silent Uninstall</div>';
                         html += '<div class="info-value path">' + escapeHtml(app.QuietUninstallString);
-                        html += '<button class="copy-btn" onclick="copyText(\'' + escapeJs(app.QuietUninstallString) + '\', this)"><i class="fas fa-copy"></i></button></div></div>';
+                        html += '<button class="copy-btn" data-copy="' + escapeAttr(app.QuietUninstallString) + '" onclick="copyText(this)"><i class="fas fa-copy"></i></button></div></div>';
                     }
                     html += '</div>';
                 }
@@ -766,7 +766,7 @@ $html = @'
                 html += '<i class="fas fa-chevron-down"></i></div>';
                 html += '<div class="registry-content" id="registry-' + idx + '">';
                 html += '<div class="info-value path" style="margin-bottom:12px">' + escapeHtml(app.RegistryPath);
-                html += '<button class="copy-btn" onclick="copyText(\'' + escapeJs(app.RegistryPath) + '\', this)"><i class="fas fa-copy"></i></button></div>';
+                html += '<button class="copy-btn" data-copy="' + escapeAttr(app.RegistryPath) + '" onclick="copyText(this)"><i class="fas fa-copy"></i></button></div>';
                 if (app.RegistryData) {
                     for (var key in app.RegistryData) {
                         html += '<div class="registry-entry"><div class="registry-key-name">' + escapeHtml(key) + '</div>';
@@ -835,9 +835,9 @@ $html = @'
             return div.innerHTML;
         }
 
-        function escapeJs(str) {
+        function escapeAttr(str) {
             if (!str) return '';
-            return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
 
         function truncate(str, len) {
@@ -861,15 +861,48 @@ $html = @'
             return kb + ' KB';
         }
 
-        function copyText(text, btn) {
-            navigator.clipboard.writeText(text).then(function() {
+        function copyText(btn) {
+            var text = btn.getAttribute('data-copy');
+            if (!text) return;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function() {
+                    btn.classList.add('copied');
+                    btn.innerHTML = '<i class="fas fa-check"></i>';
+                    showToast('Copied to clipboard', 'success');
+                    setTimeout(function() {
+                        btn.classList.remove('copied');
+                        btn.innerHTML = '<i class="fas fa-copy"></i>';
+                    }, 2000);
+                }).catch(function() {
+                    copyTextFallback(btn, text);
+                });
+            } else {
+                copyTextFallback(btn, text);
+            }
+        }
+
+        function copyTextFallback(btn, text) {
+            var textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            textArea.style.top = '0';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
                 btn.classList.add('copied');
                 btn.innerHTML = '<i class="fas fa-check"></i>';
+                showToast('Copied to clipboard', 'success');
                 setTimeout(function() {
                     btn.classList.remove('copied');
                     btn.innerHTML = '<i class="fas fa-copy"></i>';
                 }, 2000);
-            });
+            } catch (err) {
+                showToast('Failed to copy to clipboard', 'error');
+            }
+            document.body.removeChild(textArea);
         }
 
         function setView(view) {
