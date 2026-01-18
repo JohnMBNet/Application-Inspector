@@ -2,7 +2,7 @@
 
 # Application Inspector
 
-### *Peer into the soul of your Windows system*
+### *Peer into your Windows system*
 
 <br>
 
@@ -339,10 +339,6 @@ Released under the **MIT License** — See [LICENSE](LICENSE) for details.
 
 <br>
 
-```
-═══════════════════════════════════════════════════════════════════════
-                    Made with ♥ and PowerShell
-═══════════════════════════════════════════════════════════════════════
-```
+
 
 </div>
